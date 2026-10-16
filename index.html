@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="بازی آنلاین اسم فامیل؛ با دوستانت رقابت کن!">
+<meta name="theme-color" content="#FFF5E6">
+<title>اسم فامیل | بازی آنلاین</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+button,input,select{font-family:inherit;font-size:inherit}
+:root{--coral:#FF5C7A;--teal:#14B8A6;--purple:#7C5CFF;--yellow:#FFC857;--mint:#7EE0C3;--blue:#4C8DFF;--onc:#1b1a33;--r:22px;--ease:cubic-bezier(.2,.8,.2,1)}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:'Vazirmatn',Tahoma,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;padding:max(18px,env(safe-area-inset-top)) 18px 28px;position:relative;overflow-x:hidden;line-height:1.7;transition:background .4s,color .3s}
+body::before,body::after{content:'';position:fixed;z-index:-1;width:380px;height:380px;border-radius:50%;filter:blur(90px);opacity:.55;pointer-events:none}
+body::before{top:-140px;right:-120px;background:var(--b1)}
+body::after{bottom:-160px;left:-140px;background:var(--b2)}
+body[data-theme=day]{--bg:#F6F3FF;--paper:#fff;--ink:#1b1a33;--soft:#F0EDFB;--muted:#6f6c8f;--line:rgba(27,26,51,.09);--sh:0 12px 32px -14px rgba(76,50,160,.32);--b1:#c9b8ff;--b2:#ffd1dc}
+body[data-theme=night]{--bg:#0d0d21;--paper:#18183a;--ink:#f3f2ff;--soft:#242450;--muted:#a3a2cf;--line:rgba(255,255,255,.1);--sh:0 14px 34px -14px rgba(0,0,0,.8);--b1:#4b2fd0;--b2:#0e7f8f}
+body[data-theme=sunset]{--bg:#FFEBDD;--paper:#FFFAF6;--ink:#3b1d2a;--soft:#FFEEE2;--muted:#7a5a66;--line:rgba(59,29,42,.1);--sh:0 12px 32px -14px rgba(180,70,60,.35);--b1:#ffb199;--b2:#ffd98a}
+body[data-theme=forest]{--bg:#E6F4E4;--paper:#FAFFF8;--ink:#17301f;--soft:#EAF6E7;--muted:#52705a;--line:rgba(23,48,31,.1);--sh:0 12px 32px -14px rgba(30,100,60,.35);--b1:#9be3b0;--b2:#c2e9ff}
+body.hasnav{padding-bottom:116px}
+.container{max-width:500px;margin:0 auto}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .45s var(--ease)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
+/* header */
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--coral),var(--purple));border:3px solid var(--paper);display:flex;align-items:center;justify-content:center;font-size:1.7rem;box-shadow:0 0 0 2px var(--purple),var(--sh);cursor:pointer;overflow:hidden;color:#fff;transition:transform .2s var(--ease)}
+.avatar:active{transform:scale(.92)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.logo{font-size:1.75rem;font-weight:900;display:flex;gap:8px;align-items:center}
+.logo span:last-child{background:linear-gradient(120deg,var(--coral),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.icon-btn{width:50px;height:50px;border-radius:16px;background:var(--paper);border:1px solid var(--line);box-shadow:var(--sh);font-size:1.3rem;cursor:pointer;color:var(--ink);transition:transform .15s}
+.icon-btn:active{transform:scale(.92) rotate(20deg)}
+.welcome h1{font-size:1.65rem;font-weight:900;letter-spacing:-.3px}
+.welcome p{color:var(--muted);margin:2px 0 18px}
+.statbar{display:flex;gap:10px;margin-bottom:22px}
+.stat-chip{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:10px 14px;box-shadow:var(--sh);font-size:.95rem;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.stat-chip.lv{flex:1;flex-direction:column;align-items:stretch;gap:6px}
+.xpbar{height:8px;border-radius:8px;background:var(--soft);overflow:hidden}
+.xpbar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--teal),var(--blue),var(--purple));transition:width .8s var(--ease)}
+/* buttons */
+.main-btn{display:flex;align-items:center;gap:16px;padding:18px;border-radius:var(--r);border:1px solid rgba(255,255,255,.5);box-shadow:var(--sh);margin-bottom:14px;cursor:pointer;position:relative;overflow:hidden;color:var(--onc);transition:transform .2s var(--ease),box-shadow .2s;width:100%;text-align:right;font-family:inherit}
+.main-btn::after{content:'‹';position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:1.8rem;opacity:.45;font-weight:900}
+.main-btn:active{transform:scale(.97)}
+.main-btn .icon{width:58px;height:58px;background:rgba(255,255,255,.55);backdrop-filter:blur(6px);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.9rem;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)}
+.main-btn .title{font-size:1.28rem;font-weight:900}
+.main-btn .desc{font-size:.88rem;opacity:.78}
+.main-btn.black{background:linear-gradient(135deg,#2a2370,#6a3df0);color:#fff;border-color:transparent}
+.main-btn.black .icon{background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.main-btn.yellow{background:linear-gradient(135deg,#FFE29A,#FFC857)}
+.main-btn.mint{background:linear-gradient(135deg,#B8F2DF,#7EE0C3)}
+.main-btn.purple{background:linear-gradient(135deg,#EBDDFF,#CDB6FF)}
+.main-btn.blue{background:linear-gradient(135deg,#CFE4FF,#9CC6FF)}
+.main-btn.coral{background:linear-gradient(135deg,#FF8CA3,#FF5C7A);color:#fff}
+.main-btn.disabled{opacity:.55;filter:grayscale(.45)}
+.badge{position:absolute;top:10px;left:12px;background:var(--coral);color:#fff;padding:2px 11px;border-radius:20px;font-size:.7rem;font-weight:900;box-shadow:0 4px 10px -2px rgba(255,92,122,.6)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border:1px solid var(--line);border-radius:16px;font-weight:900;font-size:1rem;cursor:pointer;box-shadow:var(--sh);color:var(--ink);background:var(--paper);transition:transform .15s var(--ease),filter .2s}
+.btn:active{transform:scale(.96)}
+.btn:hover{filter:brightness(1.04)}
+.btn.block{width:100%}.btn.sm{padding:8px 13px;font-size:.88rem;border-radius:13px}
+.btn.coral{background:linear-gradient(135deg,#FF8CA3,#FF5C7A);color:#fff;border-color:transparent}
+.btn.teal{background:linear-gradient(135deg,#2DD4BF,#0EA5A0);color:#fff;border-color:transparent}
+.btn.yellow{background:linear-gradient(135deg,#FFE29A,#FFC857);color:var(--onc);border-color:transparent}
+.btn.mint{background:linear-gradient(135deg,#B8F2DF,#7EE0C3);color:var(--onc);border-color:transparent}
+.btn.blue{background:linear-gradient(135deg,#CFE4FF,#8DBBFF);color:var(--onc);border-color:transparent}
+.btn.purple{background:linear-gradient(135deg,#EBDDFF,#C9B0FF);color:var(--onc);border-color:transparent}
+.btn.dark{background:var(--ink);color:var(--paper)}
+.btn:disabled,.btn.off{opacity:.45;pointer-events:none;filter:grayscale(.4)}
+.row2{display:flex;gap:10px;margin:10px 0}.row2>*{flex:1}
+.back-btn{background:var(--paper);border:1px solid var(--line);border-radius:50px;padding:8px 18px;font-weight:900;cursor:pointer;display:inline-flex;gap:8px;box-shadow:var(--sh);margin-bottom:18px;color:var(--ink);transition:transform .15s}
+.back-btn:active{transform:scale(.95)}
+/* cards */
+.section-box,.online-card,.cat-card{background:var(--paper);border:1px solid var(--line);border-radius:26px;padding:20px;margin-bottom:16px;box-shadow:var(--sh)}
+.section-title{font-size:1.25rem;font-weight:900;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.online-card h2{font-size:1.5rem;font-weight:900;text-align:center;margin-bottom:10px}
+.mut{color:var(--muted);font-size:.9rem}.empty{text-align:center;color:var(--muted);padding:16px}
+.input-field{width:100%;padding:14px;background:var(--soft);border:2px solid transparent;border-radius:16px;font-size:1rem;font-weight:700;outline:none;margin-bottom:12px;text-align:center;color:var(--ink);transition:border-color .2s,box-shadow .2s}
+.input-field:focus{border-color:var(--purple);box-shadow:0 0 0 4px rgba(124,92,255,.18)}
+select.input-field{appearance:none;margin-bottom:0}
+.room-code-display{background:linear-gradient(135deg,#FFE29A,#FFC857);color:var(--onc);border-radius:18px;padding:12px;text-align:center;font-size:2.2rem;font-weight:900;font-family:ui-monospace,Menlo,monospace;letter-spacing:8px;margin:12px 0;cursor:pointer;direction:ltr;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
+.hint-box{background:rgba(255,200,87,.2);border:1px dashed var(--yellow);border-radius:16px;padding:12px;font-size:.88rem;margin-bottom:14px;line-height:1.9}
+.wait{text-align:center;color:var(--muted);font-weight:700;padding:14px;animation:breathe 1.8s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.5}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 15px;border-radius:99px;border:1px solid var(--line);background:var(--soft);font-weight:700;font-size:.9rem;cursor:pointer;user-select:none;transition:all .2s var(--ease)}
+.chip:active{transform:scale(.93)}
+.chip.on{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-color:transparent;box-shadow:0 6px 14px -6px rgba(124,92,255,.7)}
+/* players */
+.player-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;margin-bottom:8px;background:var(--soft)}
+.pav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.pinfo{flex:1}.pinfo small{display:block;color:var(--teal);font-weight:700}.pinfo small.off{color:var(--muted)}
+.kick{border:0;background:var(--coral);color:#fff;width:32px;height:32px;border-radius:50%;font-weight:900;cursor:pointer}
+/* game */
+.game-header{display:flex;justify-content:space-between;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:12px 16px;margin-bottom:14px;box-shadow:var(--sh)}
+.game-letter{width:64px;height:64px;background:linear-gradient(135deg,#FFE29A,#FF9F5A);color:var(--onc);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2.3rem;font-weight:900;box-shadow:0 10px 20px -8px rgba(255,140,60,.7);animation:pop .5s var(--ease)}
+@keyframes pop{from{transform:scale(.3) rotate(-20deg);opacity:0}}
+.game-timer{min-width:64px;height:48px;background:var(--soft);border-radius:30px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;font-weight:900;padding:0 14px;font-variant-numeric:tabular-nums}
+.game-timer.danger{background:var(--coral);color:#fff;animation:pulse .5s infinite}
+@keyframes pulse{50%{transform:scale(1.1)}}
+.powerups{display:flex;gap:10px;margin-bottom:14px}
+.powerup-btn{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:9px 4px;text-align:center;cursor:pointer;box-shadow:var(--sh);font-weight:700;font-size:.78rem;color:var(--ink);transition:transform .15s}
+.powerup-btn:active{transform:scale(.94)}
+.powerup-btn .p-icon{font-size:1.4rem;display:block}
+.powerup-btn .p-count{background:var(--purple);color:#fff;padding:1px 9px;border-radius:10px;font-size:.75rem}
+.powerup-btn.disabled{opacity:.4}
+.notebook{background:var(--paper);border:1px solid var(--line);border-radius:26px;padding:12px;box-shadow:var(--sh);margin-bottom:14px}
+.game-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.game-table td{padding:3px}.game-table td:first-child{width:36%}
+.cat-cell{display:flex;align-items:center;gap:6px;padding:12px 10px;font-weight:900;font-size:.92rem;background:var(--soft);border-radius:14px}
+.game-table input{width:100%;padding:13px 8px;background:var(--soft);border:2px solid transparent;border-radius:14px;font-size:1.02rem;font-weight:700;text-align:center;outline:none;color:var(--ink);transition:all .2s}
+.game-table input:focus{border-color:var(--purple);box-shadow:0 0 0 4px rgba(124,92,255,.18);background:var(--paper)}
+.game-table input.correct{border-color:var(--teal);background:#D6F7EE;color:#0b3d36}
+.game-table input.wrong{border-color:var(--coral);background:#FFE3E8;color:#5a1020}
+.game-table input.same{border-color:var(--yellow);background:#FFF3CF;color:#4a3500}
+.submit-btn{width:100%;padding:16px;background:linear-gradient(135deg,#2DD4BF,#0EA5A0);border:0;border-radius:20px;font-size:1.2rem;font-weight:900;color:#fff;cursor:pointer;box-shadow:0 14px 24px -12px rgba(14,165,160,.8);margin-bottom:10px;transition:transform .15s}
+.submit-btn:active{transform:scale(.97)}
+.submit-btn.stop{background:linear-gradient(135deg,#FF8CA3,#FF5C7A);box-shadow:0 14px 24px -12px rgba(255,92,122,.8)}
+.submit-btn.ghost{background:var(--paper);color:var(--ink);box-shadow:var(--sh);border:1px solid var(--line)}
+.submit-btn:disabled{opacity:.45;pointer-events:none;filter:grayscale(.5)}
+.stopbanner{min-height:24px;text-align:center;font-weight:900;color:var(--coral);margin-bottom:8px}
+/* board */
+.cat-title{font-weight:900;font-size:1.08rem;margin-bottom:8px}
+.ans-row{display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--line)}
+.ans-row:last-child{border:0}
+.ans-row .an{width:30%;font-size:.84rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ans-row .av{flex:1;font-weight:900}
+.ans-row .ap{background:linear-gradient(135deg,#2DD4BF,#0EA5A0);color:#fff;border-radius:10px;padding:1px 10px;font-weight:900;font-size:.85rem}
+.ans-row .ap.z{background:var(--coral)}
+.ans-row.rej .av{text-decoration:line-through;opacity:.5}
+.flag{border:0;background:var(--soft);border-radius:10px;width:36px;height:32px;cursor:pointer;filter:grayscale(1);opacity:.6;transition:all .2s}
+.flag.on{background:var(--coral);filter:none;opacity:1}
+.rank{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:18px;background:var(--soft);margin-bottom:8px}
+.rank.first{background:linear-gradient(135deg,#FFE29A,#FFC857);color:var(--onc);box-shadow:0 10px 20px -10px rgba(255,170,40,.8)}
+.rank b{margin-right:auto;font-size:1.15rem}
+.big-emoji{font-size:3.6rem;text-align:center;animation:pop .6s var(--ease)}
+.final-title{text-align:center;font-size:1.75rem;font-weight:900;margin-bottom:4px}
+/* profile / store */
+.profile-card{text-align:center;background:var(--paper);border:1px solid var(--line);border-radius:28px;padding:24px 18px;box-shadow:var(--sh);margin-bottom:18px}
+.avatar-lg{width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,var(--coral),var(--purple));border:4px solid var(--paper);box-shadow:0 0 0 3px var(--purple),var(--sh);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:3.1rem;cursor:pointer;position:relative;color:#fff}
+.avatar-lg img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.camera-icon{position:absolute;bottom:-2px;right:-2px;background:var(--yellow);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--paper);font-size:1rem}
+.emoji-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0}
+.emoji-grid span{font-size:1.5rem;padding:7px 0;border-radius:14px;cursor:pointer;background:var(--soft);transition:transform .15s}
+.emoji-grid span:active{transform:scale(.88)}
+.emoji-grid span.sel{background:linear-gradient(135deg,#FFE29A,#FFC857);box-shadow:0 6px 14px -6px rgba(255,170,40,.9)}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stat-box{background:var(--soft);border-radius:18px;padding:12px 6px}
+.stat-num{font-size:1.55rem;font-weight:900;color:var(--purple)}.stat-label{font-size:.78rem;color:var(--muted)}
+.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.store-item{background:var(--soft);border:1px solid var(--line);border-radius:22px;padding:18px 10px;text-align:center;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s}
+.store-item:active{transform:scale(.95)}
+.store-item:hover{box-shadow:var(--sh)}
+.item-icon{font-size:2.4rem}.item-name{font-weight:900;margin:4px 0}.item-price{color:var(--purple);font-weight:800;font-size:.88rem}
+.store-item.owned{background:linear-gradient(135deg,rgba(124,92,255,.14),rgba(20,184,166,.14))}
+.coins-box{display:flex;justify-content:center;align-items:center;gap:10px;padding:14px;background:linear-gradient(135deg,#FFE29A,#FFC857);color:var(--onc);border-radius:20px;font-size:1.6rem;font-weight:900}
+.ach{display:flex;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:14px;margin-bottom:12px;box-shadow:var(--sh);opacity:.6;filter:grayscale(.5)}
+.ach.unlocked{opacity:1;filter:none;background:linear-gradient(135deg,rgba(255,200,87,.2),var(--paper))}
+.ach .ai{font-size:2.3rem}.ach .info{flex:1}.ach b{display:block}.ach small{color:var(--muted)}
+.fcard{display:flex;align-items:center;gap:12px;background:var(--soft);border-radius:18px;padding:12px;margin-bottom:10px}
+.fcard .info{flex:1}.fcard small{display:block;color:var(--teal);font-weight:700}.fcard small.off{color:var(--muted)}
+.mycode{background:linear-gradient(135deg,#FFE29A,#FFC857);color:var(--onc);border-radius:18px;padding:12px;text-align:center;font-size:1.6rem;font-weight:900;font-family:ui-monospace,Menlo,monospace;letter-spacing:6px;margin:12px 0;direction:ltr;cursor:pointer}
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--soft);padding:5px;border-radius:20px}.tabs .btn{flex:1;box-shadow:none;background:transparent;border:0}.tabs .btn.act{background:var(--paper);box-shadow:var(--sh)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--soft);border-radius:18px;margin:10px 0}
+.setting-row .nm{font-weight:900}
+.setting-row input[type=range]{width:120px;accent-color:var(--purple)}
+.setting-row input[type=checkbox]{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:30px;background:var(--muted);opacity:.5;position:relative;cursor:pointer;transition:all .25s}
+.setting-row input[type=checkbox]::after{content:'';position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .25s var(--ease)}
+.setting-row input[type=checkbox]:checked{background:var(--teal);opacity:1}
+.setting-row input[type=checkbox]:checked::after{transform:translateX(-20px)}
+.stepper{display:flex;align-items:center;gap:8px}.stepper b{min-width:72px;text-align:center}
+/* nav + overlays */
+.bottom-nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:476px;display:none;background:color-mix(in srgb,var(--paper) 82%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid var(--line);border-radius:28px;box-shadow:0 18px 40px -12px rgba(40,20,100,.35);z-index:50;padding:4px}
+body.hasnav .bottom-nav{display:flex}
+.nav-item{flex:1;text-align:center;padding:8px 0 6px;font-size:.7rem;font-weight:900;cursor:pointer;color:var(--muted);border-radius:22px;transition:all .25s var(--ease)}
+.nav-item .ni{display:block;font-size:1.35rem;transition:transform .25s var(--ease)}
+.nav-item.active{color:var(--ink);background:var(--soft)}
+.nav-item.active .ni{transform:translateY(-2px) scale(1.15)}
+.modal{display:none;position:fixed;inset:0;background:rgba(10,8,30,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:18px}
+.modal.active{display:flex;animation:fadeOnly .25s}
+@keyframes fadeOnly{from{opacity:0}}
+.modal-content{background:var(--paper);color:var(--ink);border-radius:28px;padding:24px;max-width:440px;width:100%;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);max-height:88vh;overflow-y:auto;text-align:center;animation:fadeIn .35s var(--ease)}
+.modal-content h3{font-size:1.35rem;font-weight:900;margin-bottom:12px}
+.res-row{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line);text-align:right;font-size:.92rem}
+.res-row small{color:var(--muted);display:block}
+.pts{font-weight:900;color:var(--purple)}
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(200px);background:var(--ink);color:var(--paper);padding:12px 22px;border-radius:99px;font-weight:800;z-index:1000;transition:transform .35s var(--ease);box-shadow:0 14px 30px -10px rgba(0,0,0,.5);max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:300}
+#confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:3px;animation:fall linear forwards}
+#confetti i:nth-child(3n){border-radius:50%;width:11px;height:11px}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body data-theme="day">
+<div class="container">
+  <section class="page active" id="p-home"></section>
+  <section class="page" id="p-online"></section>
+  <section class="page" id="p-room"></section>
+  <section class="page" id="p-game"></section>
+  <section class="page" id="p-board"></section>
+  <section class="page" id="p-final"></section>
+  <section class="page" id="p-profile"></section>
+  <section class="page" id="p-store"></section>
+  <section class="page" id="p-ach"></section>
+  <section class="page" id="p-friends"></section>
+  <section class="page" id="p-lb"></section>
+  <section class="page" id="p-settings"></section>
+</div>
+<nav class="bottom-nav" id="nav" aria-label="منوی اصلی">
+  <div class="nav-item" role="button" tabindex="0" data-p="home" onclick="go('home')"><span class="ni">🏠</span>خانه</div>
+  <div class="nav-item" role="button" tabindex="0" data-p="lb" onclick="go('lb')"><span class="ni">🏆</span>رتبه‌بندی</div>
+  <div class="nav-item" role="button" tabindex="0" data-p="friends" onclick="go('friends')"><span class="ni">👥</span>دوستان</div>
+  <div class="nav-item" role="button" tabindex="0" data-p="store" onclick="go('store')"><span class="ni">🛍️</span>فروشگاه</div>
+  <div class="nav-item" role="button" tabindex="0" data-p="profile" onclick="go('profile')"><span class="ni">👤</span>پروفایل</div>
+</nav>
+<div class="modal" id="modal"><div class="modal-content" id="modalBody"></div></div>
+<div class="toast" id="toast"></div>
+<div id="confetti"></div>
+<script>
+/* ================= CONFIG ================= */
+const CFG={
+  apiKey:"AIzaSyAoZ2uxKXKdKbFGvIl-GpX2IIEOIQWcQCU",
+  authDomain:"esmfamil-game.firebaseapp.com",
+  databaseURL:"https://esmfamil-game-default-rtdb.firebaseio.com",
+  projectId:"esmfamil-game",
+  storageBucket:"esmfamil-game.firebasestorage.app",
+  messagingSenderId:"266879050250",
+  appId:"1:266879050250:web:31e5170b888b0cb4ac75f3"
+};
+
+/* ================= HELPERS ================= */
+const LS=k=>'sf2_'+k;
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const norm=s=>(s||'').trim().replace(/ي/g,'ی').replace(/ك/g,'ک').replace(/[‌‎‏]/g,'').replace(/\s+/g,' ');
+const firstCh=s=>{const c=norm(s)[0]||'';return c&&'آأإ'.includes(c)?'ا':c;};
+const valid=(s,l)=>{const n=norm(s);return n.length>=2&&firstCh(n)===l;};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const CH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const genCode=()=>Array.from({length:6},()=>CH[Math.floor(Math.random()*CH.length)]).join('');
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>ymd(new Date());
+const yesterday=()=>{const d=new Date();d.setDate(d.getDate()-1);return ymd(d);};
+const weekKey=()=>Math.floor(Date.now()/(7*864e5));
+const jparse=(k,def)=>{try{return JSON.parse(localStorage.getItem(LS(k)))||def;}catch(e){return def;}};
+
+const LETTERS='ا ب پ ت ج چ ح خ د ر ز س ش ص ط ف ق ک گ ل م ن و ه ی'.split(' ');
+const ALL_CATS=['اسم','فامیل','شهر','کشور','حیوان','غذا','میوه','رنگ','شی','شغل','گل','ماشین'];
+const DEF_CATS=['اسم','فامیل','شهر','غذا','میوه'];
+const CATEMO={'اسم':'👤','فامیل':'👨‍👩‍👧','شهر':'🏙️','کشور':'🌍','حیوان':'🐾','غذا':'🍕','میوه':'🍎','رنگ':'🎨','شی':'📦','شغل':'💼','گل':'🌸','ماشین':'🚗'};
+const BOTS=['رضا 🤖','نگار 🤖'];
+const FREE_E=['😎','🤓','😺','🦊','🐼','🐯','🦁','🐸','🐵','🦄','🐙','🚀'];
+const PREM_E=['👑','🦅','🐉','🔥','💎','🧙','🥷','🤖','👽','🦸','🏴‍☠️','🧞'];
+
+/* ================= DICTIONARY ================= */
+const DICT={
+'اسم':{'ا':'احمد,امیر,ارسلان,آرش,الهام,آزاده,اکبر,امین','ب':'بهرام,بهزاد,بابک,بهار,بنفشه,بهناز,بردیا','پ':'پویا,پدرام,پرستو,پریسا,پوریا,پگاه,پارسا','ت':'تینا,تورج,تارا,تهمینه,تیمور,ترانه','ج':'جواد,جمشید,جلال,جمیله,جعفر,جاوید','ح':'حسین,حسن,حمید,حامد,حانیه,حدیثه','خ':'خسرو,خدیجه,خشایار,خاطره','د':'داوود,دانیال,دنیا,دینا,داریوش,دلارام','ر':'رضا,رامین,رویا,روزبه,رها,رستم,رایان','ز':'زهرا,زینب,زهره,زیبا','س':'سارا,سعید,سینا,سمیرا,سامان,سپیده,سهیل,سحر','ش':'شهرام,شیرین,شیدا,شهاب,شقایق,شادی,شایان','ص':'صادق,صبا,صالح,صدف','ط':'طاهر,طاهره,طناز,طاها','ف':'فرهاد,فاطمه,فرزاد,فریبا,فاضل,فرناز','ق':'قاسم','ک':'کامران,کیانا,کاوه,کوروش,کامبیز,کیمیا,کریم','گ':'گلناز,گیتا,گلاره,گودرز,گیلدا','ل':'لیلا,لادن,لعیا','م':'محمد,مریم,مهدی,مینا,مسعود,مهسا,مهران,مرضیه','ن':'نرگس,نیما,نسترن,ناصر,نازنین,نوید,ندا','و':'وحید,ونوس,وحیده,ویدا','ه':'هادی,هانیه,هومن,هنگامه,هلیا,هاشم','ی':'یاسر,یاسمن,یوسف,یگانه,یعقوب,یلدا'},
+'فامیل':{'ا':'احمدی,اکبری,امیری,اسدی,ایزدی','ب':'بهرامی,باقری,بختیاری,بهشتی,برزگر','پ':'پاکزاد,پارسا,پناهی','ت':'تهرانی,تقوی,توکلی','ج':'جعفری,جلالی,جمالی,جوادی','ح':'حسینی,حیدری,حسنی,حبیبی,حکیمی','خ':'خسروی,خادمی,خلیلی','د':'دهقان,داوودی,دانشور,دلاوری','ر':'رضایی,رستمی,رحیمی,رحمانی,رسولی','ز':'زارعی,زمانی,زندی,زهرایی','س':'سلطانی,سعیدی,سلیمانی,سیفی','ش':'شریفی,شیرازی,شجاعی,شکوهی','ص':'صادقی,صفوی,صالحی','ط':'طاهری,طباطبایی','ف':'فرهادی,فتحی,فروغی,فاضلی','ق':'قاسمی,قنبری,قربانی','ک':'کریمی,کاظمی,کیانی,کمالی','گ':'گلستانی,گودرزی,گیلانی','ل':'لطفی,لاریجانی','م':'محمدی,موسوی,مرادی,میرزایی,مطهری','ن':'نوری,نجفی,نصیری,نیکنام','و':'وحیدی,وکیلی,ولیزاده','ه':'هاشمی,همتی,هدایتی','ی':'یوسفی,یزدانی,یعقوبی'},
+'شهر':{'ا':'اصفهان,اهواز,اراک,اردبیل,ارومیه,ایلام,آمل,آبادان','ب':'بوشهر,بندرعباس,بیرجند,بجنورد,بابل,بم,بروجرد','پ':'پاوه,پیرانشهر','ت':'تهران,تبریز,تنکابن,تفرش','ج':'جیرفت,جم,جاسک,جلفا','چ':'چابهار,چالوس,چناران','خ':'خرمشهر,خوی,خمین,خرمآباد,خاش','د':'دزفول,دامغان,دماوند','ر':'رشت,رفسنجان,رامسر,ری,رودسر','ز':'زاهدان,زنجان,زابل,زرند','س':'سمنان,سنندج,ساری,سبزوار,سقز','ش':'شیراز,شاهرود,شوشتر,شهرکرد','ط':'طبس','ف':'فسا,فردوس,فیروزآباد','ق':'قم,قزوین,قوچان,قشم','ک':'کرج,کرمان,کرمانشاه,کاشان,کیش,کاشمر','گ':'گرگان,گنبد,گچساران,گناباد,گرمسار','ل':'لار,لاهیجان,لنگرود','م':'مشهد,ملایر,مهاباد,مراغه,میانه,مریوان','ن':'نیشابور,نطنز,نور,نوشهر,نهاوند','و':'ورامین','ه':'همدان,هرسین','ی':'یزد,یاسوج'},
+'کشور':{'ا':'ایران,ایتالیا,اسپانیا,استرالیا,اتریش,آلمان,آمریکا,آرژانتین,افغانستان,اندونزی','ب':'برزیل,بلژیک,بلغارستان,بحرین,بنگلادش,بلاروس','پ':'پاکستان,پرتغال,پرو,پاناما,پاراگوئه','ت':'ترکیه,تاجیکستان,تایلند,تونس,تایوان','ج':'جامائیکا,جیبوتی','چ':'چین,چاد','د':'دانمارک','ر':'روسیه,رومانی','ز':'زیمبابوه,زامبیا','س':'سوئد,سوئیس,سوریه,سنگاپور,سودان,سومالی','ص':'صربستان','ف':'فرانسه,فنلاند,فیلیپین,فیجی','ق':'قطر,قزاقستان,قبرس,قرقیزستان','ک':'کانادا,کره,کویت,کوبا,کنیا,کلمبیا','گ':'گرجستان,گینه,گواتمالا','ل':'لبنان,لهستان,لیبی,لیتوانی','م':'مصر,مکزیک,مراکش,مالزی,مجارستان','ن':'نروژ,نیجریه,نپال','و':'ونزوئلا,ویتنام','ه':'هند,هلند,هائیتی,هندوراس','ی':'یونان,یمن'},
+'حیوان':{'ا':'اسب,الاغ,اردک,افعی,آهو','ب':'بز,بوقلمون,بلبل,بابون,بره,بلدرچین','پ':'پلنگ,پنگوئن,پروانه,پلیکان,پشه','ت':'تمساح,توکا,تیهو','ج':'جغد,جوجه,جیرجیرک,جوجهتیغی','چ':'چکاوک,چلچله','ح':'حلزون,حشره,حواصیل','خ':'خرس,خر,خرگوش,خفاش,خوک','د':'دلفین,دراج,دایناسور','ر':'روباه,راسو,رتیل','ز':'زرافه,زنبور,زاغ,زالو','س':'سگ,سنجاب,سوسمار,سمور,سنجاقک','ش':'شیر,شتر,شغال,شاهین,شترمرغ,شپش','ص':'صدف,صعوه','ط':'طاووس,طوطی','ف':'فیل,فک,فلامینگو,فاخته','ق':'قو,قورباغه,قناری,قوچ,قاطر,قرقاول','ک':'کبوتر,کروکودیل,کانگورو,کلاغ,کرم,کوالا,کفتار','گ':'گربه,گاو,گرگ,گوزن,گوریل,گنجشک,گوسفند,گراز','ل':'لاکپشت,لاما,لکلک','م':'مار,مرغ,موش,ماهی,میمون,مگس,مورچه,مرغابی','ن':'نهنگ','و':'وزغ,وال','ه':'هدهد,هشتپا,همستر','ی':'یوز,یوزپلنگ'},
+'غذا':{'ا':'آش,آبگوشت,املت,اشکنه,باقلوا','ب':'باقالیپلو,برنج,بورانی,بستنی,بیفتک,باقلوا','پ':'پیتزا,پلو,پاستا,پیراشکی,پنیر,پفک','ت':'تهچین,تخممرغ,تهدیگ,تاسکباب','ج':'جوجهکباب,جگر','چ':'چلوکباب,چلو,چیپس','ح':'حلیم,حلوا','خ':'خورشت,خوراک,خاگینه,خیارشور','د':'دلمه,دوغ,دمپخت,دیزی,دونر','ر':'رشتهپلو,رولت','ز':'زرشکپلو','س':'سوپ,سالاد,ساندویچ,سمبوسه,سیرابی,سوسیس','ش':'شلهزرد,شیشلیک,شامی,شربت,شیرینی','ف':'فسنجان,فلافل,فرنی,فالوده','ق':'قورمهسبزی,قیمه,قلیه','ک':'کباب,کوکو,کتلت,کلمپلو,کیک,کوبیده','گ':'گوشت,گوجه,گز','ل':'لوبیاپلو,لازانیا,لواشک','م':'ماکارونی,مرغ,ماهی,میرزاقاسمی,ماست,مسقطی','ن':'نان,نخودچی,نوشابه,نودل','و':'وافل','ه':'همبرگر,هاتداگ'},
+'میوه':{'ا':'انار,انگور,انجیر,آلو,آناناس,انبه,آلبالو','ب':'بادام,بلوبری','پ':'پرتقال,پاپایا','ت':'توت,توتفرنگی','خ':'خربزه,خرمالو,خرما','س':'سیب,سنجد','ش':'شلیل,شاهتوت','ط':'طالبی','ف':'فندق','ک':'کیوی,کنار','گ':'گلابی,گیلاس,گریپفروت,گوجه','ل':'لیمو,لیچی','م':'موز,مرکبات,ملون','ن':'نارنگی,نارگیل,نارنج','ه':'هلو,هندوانه'},
+'رنگ':{'ا':'ارغوانی,آبی,آجری,استخوانی','ب':'بنفش,بژ,بنفشه','پ':'پرتقالی,پستهای','ت':'تیره','ج':'جگری','چ':'چرمی','ح':'حنایی','خ':'خاکستری,خردلی','ز':'زرد,زرشکی,زمردی','س':'سبز,سفید,سرخ,سیاه,سرمهای','ش':'شرابی,شیری','ص':'صورتی','ط':'طلایی','ق':'قرمز,قهوهای,قیری','ک':'کرم,کهربایی,کبود','ل':'لیمویی,لاجوردی','ن':'نارنجی,نقرهای,نیلی','ه':'هلویی'}
+};
+const dictWords=(c,l)=>{const s=DICT[c]&&DICT[c][l];return s?s.split(','):[];};
+
+/* ================= STATE ================= */
+const DEF_P=()=>({id:genCode(),name:'بازیکن',emoji:'😎',photo:null,level:1,xp:0,coins:150,games:0,wins:0,onlineWins:0,score:0,best:0,perfect:0,speed:0,streak:0,lastDaily:'',gift:'',inv:{hint:3,time:2,skip:1},owned:{},theme:'day',claimed:{},seen:{},friends:[]});
+const DEF_S=()=>({sfx:true,vol:70,vibrate:true,rounds:5,time:60,cats:DEF_CATS.slice()});
+const FIRST_RUN=!localStorage.getItem(LS('p'));
+let P=Object.assign(DEF_P(),jparse('p',{}));
+let S=Object.assign(DEF_S(),jparse('s',{}));
+const saveP=()=>localStorage.setItem(LS('p'),JSON.stringify(P));
+const saveS=()=>localStorage.setItem(LS('s'),JSON.stringify(S));
+let G=null;          // game state
+let R=null,RC=null,roomRef=null; // room snapshot / code / ref
+let db=null,fbOK=false,serverOffset=0,pendingJoin=null,didInit=false,lock='',viewKey='';
+const now=()=>Date.now()+serverOffset;
+
+/* ================= SOUND ================= */
+let AC;
+function tone(f,d=.12,type='sine',v=.2,t0=0){
+  if(!S.sfx)return;
+  try{
+    AC=AC||new(window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type;o.frequency.value=f;
+    const vol=v*(S.vol/100),t=AC.currentTime+t0;
+    g.gain.setValueAtTime(Math.max(vol,.0002),t);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);
+  }catch(e){}
+}
+const SFX={
+  click:()=>tone(520,.05,'square',.1),
+  ok:()=>{tone(660,.1);tone(880,.15,'sine',.2,.1);},
+  bad:()=>tone(180,.25,'sawtooth',.15),
+  tick:()=>tone(900,.04,'square',.08),
+  stop:()=>{tone(300,.1,'square');tone(200,.2,'square',.2,.1);},
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',.22,i*.12))
+};
+const vib=ms=>{if(S.vibrate&&navigator.vibrate)navigator.vibrate(ms);};
+document.addEventListener('click',e=>{if(e.target.closest('button,.main-btn,.nav-item,.chip,.store-item,.emoji-grid span'))SFX.click();});
+
+/* ================= UI UTILS ================= */
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600);}
+function modal(html){$('#modalBody').innerHTML=html;$('#modal').classList.add('active');}
+function closeModal(){$('#modal').classList.remove('active');}
+function ask(msg,yes){window._yes=yes;modal(`<h3>${msg}</h3><div class="row2"><button class="btn coral" onclick="closeModal();_yes()">بله</button><button class="btn" onclick="closeModal()">خیر</button></div>`);}
+function confetti(){
+  const c=$('#confetti'),cols=['#FF6B6B','#4ECDC4','#FFD93D','#9B59B6','#95E1D3','#4A90E2'];
+  for(let i=0;i<60;i++){const s=document.createElement('i');
+    s.style.cssText=`left:${Math.random()*100}%;background:${rnd(cols)};animation-delay:${Math.random()*.6}s;animation-duration:${1.6+Math.random()*1.4}s`;
+    c.appendChild(s);setTimeout(()=>s.remove(),3600);}
+}
+function copyText(t){
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('📋 کپی شد!')).catch(()=>{
+    const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('📋 کپی شد!');}catch(e){}a.remove();});
+}
+function avatarHTML(){return P.photo?`<img src="${P.photo}" alt="">`:esc(P.emoji);}
+function applyTheme(){document.body.dataset.theme=P.theme||'day';const m=document.querySelector('meta[name=theme-color]');if(m)m.content=getComputedStyle(document.body).getPropertyValue('--bg').trim()||'#FFF5E6';}
+
+/* ================= XP / ACHIEVEMENTS ================= */
+const ACH=[
+ {id:'first_game',n:'قدم اول',d:'اولین بازی‌ات را تمام کن',i:'🎮',r:30,f:p=>p.games>=1},
+ {id:'first_win',n:'اولین برد',d:'اولین بازی را ببر',i:'🏆',r:50,f:p=>p.wins>=1},
+ {id:'ten_games',n:'بازیکن فعال',d:'۱۰ بازی انجام بده',i:'🔥',r:100,f:p=>p.games>=10},
+ {id:'perfect',n:'دور کامل',d:'همهٔ خانه‌ها را در یک دور درست پر کن',i:'✨',r:150,f:p=>p.perfect>=1},
+ {id:'speed',n:'سرعتی',d:'دور کامل را با ۳۰ ثانیه باقی‌مانده تمام کن',i:'⚡',r:100,f:p=>p.speed>=1},
+ {id:'social',n:'اجتماعی',d:'۵ دوست اضافه کن',i:'👥',r:200,f:p=>p.friends.length>=5},
+ {id:'rich',n:'ثروتمند',d:'۱۰۰۰ سکه جمع کن',i:'💰',r:300,f:p=>p.coins>=1000},
+ {id:'streak3',n:'پشتکار',d:'۳ روز پشت‌سرهم چالش روزانه',i:'📅',r:120,f:p=>p.streak>=3},
+ {id:'online_win',n:'قهرمان اتاق',d:'یک بازی آنلاین را ببر',i:'👑',r:200,f:p=>p.onlineWins>=1},
+ {id:'lv5',n:'کهنه‌کار',d:'به سطح ۵ برس',i:'🎖️',r:150,f:p=>p.level>=5}
+];
+function addXP(n){
+  P.xp+=n;
+  while(P.xp>=P.level*100){P.xp-=P.level*100;P.level++;P.coins+=20*P.level;toast('🎉 سطح '+fa(P.level)+' شدی!');confetti();SFX.win();}
+}
+function checkAch(){
+  ACH.forEach(a=>{if(a.f(P)&&!P.seen[a.id]){P.seen[a.id]=1;toast('🏅 دست‌آورد جدید: '+a.n);}});
+  saveP();
+}
+function applyStats({score,win,online,extra}){
+  P.games++;P.score+=score;P.best=Math.max(P.best,score);
+  if(win){P.wins++;if(online)P.onlineWins++;}
+  const coins=Math.floor(score/4)+(win?30:0)+(extra||0);
+  P.coins+=coins;
+  addXP(Math.floor(score/2)+10+(win?25:0));
+  saveP();pushLB(score);checkAch();
+  return coins;
+}
+
+/* ================= ROUTER ================= */
+const HIDENAV=['room','game','board','final','online'];
+const RENDER={};
+function go(p,push=true){
+  if(G&&G.active&&G.mode!=='online'&&p!=='game'){return ask('بازی نیمه‌کاره می‌مونه. خارج شی؟',()=>{G.active=false;go(p,push);});}
+  $$('.page').forEach(x=>x.classList.remove('active'));
+  const el=$('#p-'+p);if(el)el.classList.add('active');
+  document.body.classList.toggle('hasnav',!HIDENAV.includes(p));
+  $$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.p===p));
+  if(RENDER[p])RENDER[p]();
+  window.scrollTo(0,0);
+  if(push&&!['room','game','board','final'].includes(p))history.pushState({p},'');
+}
+const show=p=>go(p,false);
+window.addEventListener('popstate',e=>{
+  if(G&&G.active){history.pushState({p:'game'},'');return ask('از بازی خارج شی؟',quitGame);}
+  go((e.state&&e.state.p)||'home',false);
+});
+function quitGame(){
+  if(G&&G.mode==='online'){leaveRoom();return;}
+  if(G)G.active=false;G=null;go('home');
+}
+/* ================= FIREBASE ================= */
+function initFirebase(){
+  try{
+    if(typeof firebase==='undefined')return;
+    firebase.initializeApp(CFG);db=firebase.database();
+    db.ref('.info/serverTimeOffset').on('value',s=>serverOffset=s.val()||0);
+    db.ref('.info/connected').on('value',s=>{
+      fbOK=s.val()===true;updConn();
+      if(fbOK){
+        const ref=db.ref('users/'+P.id);
+        ref.onDisconnect().update({on:false,seen:firebase.database.ServerValue.TIMESTAMP});
+        pushProfile();
+        if(!didInit){didInit=true;if(pendingJoin)joinRoom(pendingJoin);else resumeRoom();}
+      }
+    });
+    setInterval(pushProfile,45000);
+  }catch(e){console.warn(e);}
+}
+function pushProfile(){
+  if(!fbOK)return;
+  db.ref('users/'+P.id).update({n:P.name,e:P.emoji,lv:P.level,s:P.score,on:true,seen:firebase.database.ServerValue.TIMESTAMP});
+}
+function updConn(){const el=$('#conn');if(el)el.innerHTML=fbOK?'🟢 متصل به سرور':'🔴 اتصال برقرار نیست';}
+function needFB(quiet){
+  return new Promise(res=>{
+    if(!db){if(!quiet)toast('Firebase در دسترس نیست؛ اینترنت را بررسی کن');return res(false);}
+    if(fbOK)return res(true);
+    let t=0;const iv=setInterval(()=>{
+      if(fbOK){clearInterval(iv);res(true);}
+      else if(++t>20){clearInterval(iv);if(!quiet)toast('اتصال به سرور برقرار نشد');res(false);}
+    },200);
+  });
+}
+async function fetchLB(kind){
+  const path=kind==='week'?'lb/w'+weekKey():'lb/all';
+  const snap=await db.ref(path).orderByChild('s').limitToLast(20).once('value');
+  const a=[];snap.forEach(c=>{a.push(Object.assign({id:c.key},c.val()));});
+  return a.reverse();
+}
+function pushLB(gain){
+  if(!fbOK||gain<=0)return;
+  const base={n:P.name,e:P.emoji,lv:P.level};
+  ['lb/all/'+P.id,'lb/w'+weekKey()+'/'+P.id].forEach(path=>
+    db.ref(path).transaction(c=>Object.assign({},base,{s:((c&&c.s)||0)+gain})));
+}
+
+/* ================= HOME ================= */
+RENDER.home=function(){
+  const p=P,need=p.level*100,pct=Math.min(100,Math.round(p.xp/need*100));
+  const dailyDone=p.lastDaily===today();
+  const unclaimed=ACH.filter(a=>a.f(p)&&!p.claimed[a.id]).length;
+  $('#p-home').innerHTML=`
+  <div class="header">
+    <div class="avatar" role="button" aria-label="پروفایل" onclick="go('profile')">${avatarHTML()}</div>
+    <div class="logo"><span>📝</span><span>اسم فامیل</span></div>
+    <button class="icon-btn" aria-label="تنظیمات" onclick="go('settings')">⚙️</button>
+  </div>
+  <div class="welcome"><h1>👋 سلام، ${esc(p.name)}</h1><p>آماده‌ای بقیه رو به چالش بکشی؟</p></div>
+  <div class="statbar">
+    <div class="stat-chip lv"><b>سطح ${fa(p.level)}</b><div class="xpbar"><i style="width:${pct}%"></i></div></div>
+    <div class="stat-chip">🪙 <b>${fa(p.coins)}</b></div>
+    <div class="stat-chip">🔥 <b>${fa(p.streak)}</b></div>
+  </div>
+  <button class="main-btn black" onclick="go('online')"><div class="icon">👥</div><div><div class="title">بازی دورهمی</div><div class="desc">ساخت اتاق و دعوت دوستان</div></div></button>
+  <button class="main-btn yellow" onclick="startSolo('solo')"><div class="icon">⚔️</div><div><div class="title">بازی سریع</div><div class="desc">رقابت با ربات‌ها</div></div></button>
+  <button class="main-btn purple ${dailyDone?'disabled':''}" onclick="startSolo('daily')"><span class="badge">${dailyDone?'انجام شد':'جدید'}</span><div class="icon">📅</div><div><div class="title">چالش روزانه</div><div class="desc">${dailyDone?'فردا دوباره بیا!':'همه با یک حرف رقابت می‌کنند!'}</div></div></button>
+  <button class="main-btn mint" onclick="go('store')"><div class="icon">🛍️</div><div><div class="title">فروشگاه</div><div class="desc">تم، آواتار و ابزار</div></div></button>
+  <button class="main-btn blue" onclick="go('ach')"><div class="icon">🏅</div><div><div class="title">دست‌آوردها</div><div class="desc">${unclaimed?fa(unclaimed)+' جایزه آمادهٔ دریافت!':'جایزه بگیر'}</div></div></button>
+  <div class="section-box"><div class="section-title">🏆 برترین‌های هفته</div><div id="weeklyTop"><div class="empty">در حال بارگذاری...</div></div></div>`;
+  loadWeeklyTop();
+};
+async function loadWeeklyTop(){
+  const el=$('#weeklyTop');if(!el)return;
+  if(!await needFB(true)){el.innerHTML='<div class="empty">برای دیدن برترین‌ها به اینترنت وصل شو</div>';return;}
+  try{
+    const l=(await fetchLB('week')).slice(0,3),m=['🥇','🥈','🥉'],e2=$('#weeklyTop');if(!e2)return;
+    e2.innerHTML=l.length?`<div style="display:flex;justify-content:space-around;text-align:center">${l.map((u,i)=>`<div><div style="font-size:2rem">${m[i]}</div><div style="font-size:1.4rem">${esc(u.e||'😎')}</div><b style="font-size:.9rem">${esc(u.n)}</b><div style="color:var(--purple);font-weight:700">${fa(u.s)}</div></div>`).join('')}</div>`:'<div class="empty">این هفته هنوز کسی بازی نکرده؛ اول تو باش!</div>';
+  }catch(e){const e2=$('#weeklyTop');if(e2)e2.innerHTML='<div class="empty">خطا در دریافت اطلاعات</div>';}
+}
+
+/* ================= ONLINE (create / join) ================= */
+RENDER.online=function(){
+  $('#p-online').innerHTML=`
+  <button class="back-btn" onclick="go('home')">→ بازگشت</button>
+  <div class="online-card"><h2>👥 بازی آنلاین</h2>
+    <p class="mut" style="text-align:center;margin-bottom:14px;line-height:1.8">اتاق بساز و دوستانت رو دعوت کن، یا با کد وارد اتاق بشو.<br>تا ۸ نفر هم‌زمان!</p>
+    <div id="conn" style="text-align:center;font-weight:700;margin-bottom:12px"></div>
+    <div class="mut" style="margin-bottom:6px">بازی با اسم: <b style="color:var(--ink)">${esc(P.emoji)} ${esc(P.name)}</b></div>
+    <button class="btn teal block" onclick="createRoom()">🏠 ساخت اتاق جدید</button>
+  </div>
+  <div class="online-card"><div class="section-title">🚪 ورود با کد</div>
+    <input class="input-field" id="roomCode" maxlength="6" placeholder="کد ۶ حرفی" style="font-size:1.5rem;letter-spacing:5px;direction:ltr" value="${esc(pendingJoin||'')}">
+    <button class="btn blue block" onclick="joinRoom()">ورود به اتاق</button>
+  </div>`;
+  updConn();
+};
+
+/* ================= PROFILE ================= */
+RENDER.profile=function(){
+  const p=P,hasPrem=!!p.owned.av_pack,list=FREE_E.concat(PREM_E);
+  $('#p-profile').innerHTML=`
+  <div class="profile-card">
+    <div class="avatar-lg" onclick="$('#avIn').click()">${avatarHTML()}<div class="camera-icon">📷</div></div>
+    <input type="file" id="avIn" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+    ${p.photo?'<button class="btn sm" onclick="removePhoto()">حذف عکس</button>':''}
+    <h2 style="font-size:1.6rem;margin:10px 0 2px">${esc(p.name)}</h2>
+    <div style="color:var(--purple);font-weight:700">سطح ${fa(p.level)} · ${fa(p.xp)}/${fa(p.level*100)} XP</div>
+    <div class="emoji-grid">${list.map((e,i)=>{const lock=i>=FREE_E.length&&!hasPrem;return `<span class="${p.emoji===e&&!p.photo?'sel':''}" onclick="${lock?"toast('🔒 از فروشگاه باز کن')":`pickEmoji('${e}')`}">${lock?'🔒':e}</span>`;}).join('')}</div>
+    <input class="input-field" id="nameIn" maxlength="14" placeholder="نام جدید" value="${esc(p.name)}">
+    <button class="btn teal block" onclick="saveName()">💾 ذخیره نام</button>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-num">${fa(p.games)}</div><div class="stat-label">بازی</div></div>
+      <div class="stat-box"><div class="stat-num">${fa(p.wins)}</div><div class="stat-label">برد</div></div>
+      <div class="stat-box"><div class="stat-num">${fa(p.score)}</div><div class="stat-label">امتیاز کل</div></div>
+    </div>
+    <div class="mut" style="margin-top:14px">کد تو (برای دوستانت)</div>
+    <div class="mycode" onclick="copyText(P.id)">${p.id}</div>
+  </div>`;
+};
+function pickEmoji(e){P.emoji=e;P.photo=null;saveP();pushProfile();RENDER.profile();}
+function saveName(){const n=$('#nameIn').value.trim().slice(0,14);if(!n)return toast('اسم نمی‌تونه خالی باشه');P.name=n;saveP();pushProfile();toast('✅ ذخیره شد');RENDER.profile();}
+function removePhoto(){P.photo=null;saveP();RENDER.profile();}
+function uploadAvatar(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const img=new Image(),fr=new FileReader();
+  fr.onload=e=>{img.onload=()=>{
+    const c=document.createElement('canvas');c.width=c.height=96;
+    const s=Math.min(img.width,img.height),sx=(img.width-s)/2,sy=(img.height-s)/2;
+    c.getContext('2d').drawImage(img,sx,sy,s,s,0,0,96,96);
+    P.photo=c.toDataURL('image/jpeg',.8);saveP();toast('✅ عکس تغییر کرد');RENDER.profile();
+  };img.src=e.target.result;};
+  fr.readAsDataURL(f);
+}
+function firstRun(){
+  modal(`<div class="big-emoji">👋</div><h3>خوش اومدی!</h3><p class="mut" style="margin-bottom:12px">اسمت چیه؟</p>
+  <input class="input-field" id="frName" maxlength="14" placeholder="مثلاً علی">
+  <button class="btn teal block" onclick="const n=$('#frName').value.trim();if(!n)return toast('یه اسم بنویس');P.name=n.slice(0,14);saveP();pushProfile();closeModal();RENDER.home();">شروع بازی 🚀</button>`);
+}
+
+/* ================= STORE ================= */
+const STORE=[
+ {id:'th_night',t:'theme',n:'تم شب',i:'🌙',p:150,th:'night'},
+ {id:'th_sunset',t:'theme',n:'تم غروب',i:'🌇',p:200,th:'sunset'},
+ {id:'th_forest',t:'theme',n:'تم جنگل',i:'🌲',p:250,th:'forest'},
+ {id:'av_pack',t:'av',n:'آواتارهای ویژه',i:'👑',p:300},
+ {id:'pu_hint',t:'pw',k:'hint',c:3,n:'۳ راهنما',i:'💡',p:60},
+ {id:'pu_time',t:'pw',k:'time',c:2,n:'۲ زمان اضافه',i:'⏱️',p:70},
+ {id:'pu_skip',t:'pw',k:'skip',c:1,n:'۱ حذف دسته',i:'❌',p:50}
+];
+RENDER.store=function(){
+  const giftReady=P.gift!==today();
+  $('#p-store').innerHTML=`
+  <button class="back-btn" onclick="go('home')">→ بازگشت</button>
+  <div class="section-box"><div class="section-title">🛍️ فروشگاه</div>
+    <div class="coins-box"><span>🪙</span><span>${fa(P.coins)}</span></div>
+    <button class="btn yellow block ${giftReady?'':'off'}" style="margin-top:14px" onclick="claimGift()">🎁 ${giftReady?'هدیهٔ روزانه':'هدیهٔ امروز گرفته شد'}</button>
+    <div class="mut" style="margin-top:12px">ابزارهای تو: 💡${fa(P.inv.hint)} ⏱️${fa(P.inv.time)} ❌${fa(P.inv.skip)}</div>
+    <div class="store-grid">${STORE.map(it=>{
+      const own=it.t!=='pw'&&P.owned[it.id],equipped=it.t==='theme'&&P.theme===it.th;
+      return `<div class="store-item ${own?'owned':''}" onclick="buy('${it.id}')"><div class="item-icon">${it.i}</div><div class="item-name">${it.n}</div><div class="item-price">${own?(it.t==='theme'?(equipped?'✓ فعال':'استفاده'):'✓ خریداری شد'):fa(it.p)+' سکه'}</div></div>`;}).join('')}
+    </div>
+    ${P.theme!=='day'?'<button class="btn block" onclick="setTheme(\'day\')">☀️ برگشت به تم روز</button>':''}
+  </div>`;
+};
+function claimGift(){
+  if(P.gift===today())return;
+  P.gift=today();const c=20+Math.min(P.streak,10)*5;P.coins+=c;saveP();SFX.ok();toast('🎁 '+fa(c)+' سکه گرفتی!');RENDER.store();checkAch();
+}
+function setTheme(t){P.theme=t;saveP();applyTheme();RENDER.store();}
+function buy(id){
+  const it=STORE.find(x=>x.id===id);
+  if(it.t==='theme'&&P.owned[id])return setTheme(it.th);
+  if(it.t!=='pw'&&P.owned[id])return toast('این رو داری!');
+  if(P.coins<it.p){SFX.bad();return toast('سکه کافی نداری!');}
+  P.coins-=it.p;
+  if(it.t==='pw')P.inv[it.k]+=it.c;else P.owned[id]=1;
+  if(it.t==='theme'){P.theme=it.th;applyTheme();}
+  saveP();SFX.ok();toast('✅ '+it.n+' خریداری شد!');RENDER.store();checkAch();
+}
+
+/* ================= ACHIEVEMENTS ================= */
+RENDER.ach=function(){
+  $('#p-ach').innerHTML=`<button class="back-btn" onclick="go('home')">→ بازگشت</button>
+  <div class="section-box"><div class="section-title">🏅 دست‌آوردها</div>${ACH.map(a=>{
+    const u=a.f(P),c=P.claimed[a.id];
+    return `<div class="ach ${u?'unlocked':''}"><div class="ai">${a.i}</div><div class="info"><b>${a.n}</b><small>${a.d}</small></div>${u?(c?'<span>✅</span>':`<button class="btn yellow sm" onclick="claimAch('${a.id}')">🪙 ${fa(a.r)}</button>`):`<span class="mut">🪙 ${fa(a.r)}</span>`}</div>`;}).join('')}</div>`;
+};
+function claimAch(id){const a=ACH.find(x=>x.id===id);if(!a||!a.f(P)||P.claimed[id])return;P.claimed[id]=1;P.coins+=a.r;saveP();SFX.ok();confetti();toast('🪙 '+fa(a.r)+' سکه گرفتی!');RENDER.ach();checkAch();}
+
+/* ================= FRIENDS ================= */
+RENDER.friends=function(){
+  $('#p-friends').innerHTML=`<button class="back-btn" onclick="go('home')">→ بازگشت</button>
+  <div class="section-box"><div class="section-title">👥 دوستان</div>
+    <div class="mut">کد تو؛ به دوستانت بده</div><div class="mycode" onclick="copyText(P.id)">${P.id}</div>
+    <input class="input-field" id="fCode" maxlength="6" placeholder="کد دوست را وارد کن" style="direction:ltr;letter-spacing:4px">
+    <button class="btn mint block" onclick="addFriend()">➕ افزودن دوست</button>
+    <div id="fList" style="margin-top:18px"></div></div>`;
+  loadFriends();
+};
+async function loadFriends(){
+  const el=$('#fList');if(!el)return;
+  if(!P.friends.length){el.innerHTML='<div class="empty">هنوز دوستی اضافه نکردی</div>';return;}
+  el.innerHTML='<div class="empty">در حال بارگذاری...</div>';
+  const ok=await needFB(true),rows=[];
+  for(const code of P.friends){
+    let u=null;if(ok){try{u=(await db.ref('users/'+code).once('value')).val();}catch(e){}}
+    const on=u&&u.on&&(now()-(u.seen||0)<120000);
+    rows.push(`<div class="fcard"><div class="pav">${esc(u?u.e:'👤')}</div><div class="info"><b>${esc(u?u.n:code)}</b><small class="${on?'':'off'}">${u?(on?'🟢 آنلاین':'⚫ آفلاین')+' · سطح '+fa(u.lv||1):'نامشخص'}</small></div>${RC?`<button class="btn sm yellow" onclick="copyText('${RC}')">دعوت</button>`:''}<button class="kick" onclick="removeFriend('${code}')">✕</button></div>`);
+  }
+  const e2=$('#fList');if(e2)e2.innerHTML=rows.join('');
+}
+async function addFriend(){
+  const code=$('#fCode').value.trim().toUpperCase();
+  if(code.length!==6)return toast('کد ۶ حرفی وارد کن');
+  if(code===P.id)return toast('این کد خودته!');
+  if(P.friends.includes(code))return toast('قبلاً اضافه شده');
+  if(!await needFB())return;
+  const u=(await db.ref('users/'+code).once('value')).val();
+  if(!u){SFX.bad();return toast('کاربری با این کد پیدا نشد');}
+  P.friends.push(code);saveP();SFX.ok();toast('✅ '+u.n+' اضافه شد');checkAch();RENDER.friends();
+}
+function removeFriend(c){P.friends=P.friends.filter(x=>x!==c);saveP();RENDER.friends();}
+
+/* ================= LEADERBOARD ================= */
+let lbKind='week';
+RENDER.lb=function(){
+  $('#p-lb').innerHTML=`<button class="back-btn" onclick="go('home')">→ بازگشت</button>
+  <div class="section-box"><div class="section-title">🏆 رتبه‌بندی</div>
+  <div class="tabs"><button class="btn ${lbKind==='week'?'act':''}" onclick="lbKind='week';RENDER.lb()">هفتگی</button><button class="btn ${lbKind==='all'?'act':''}" onclick="lbKind='all';RENDER.lb()">کل</button></div>
+  <div id="lbList"><div class="empty">در حال بارگذاری...</div></div></div>`;
+  (async()=>{
+    const el=()=>$('#lbList');
+    if(!await needFB(true)){if(el())el().innerHTML='<div class="empty">اتصال برقرار نیست</div>';return;}
+    try{
+      const l=await fetchLB(lbKind),m=['🥇','🥈','🥉'];
+      if(el())el().innerHTML=l.length?l.map((u,i)=>`<div class="rank ${i===0?'first':''}"><span style="width:30px;text-align:center">${m[i]||fa(i+1)}</span><span>${esc(u.e||'😎')}</span><span>${esc(u.n)}${u.id===P.id?' (تو)':''}</span><b>${fa(u.s)}</b></div>`).join(''):'<div class="empty">هنوز امتیازی ثبت نشده</div>';
+    }catch(e){if(el())el().innerHTML='<div class="empty">خطا در دریافت اطلاعات</div>';}
+  })();
+};
+
+/* ================= SETTINGS ================= */
+RENDER.settings=function(){
+  $('#p-settings').innerHTML=`<button class="back-btn" onclick="go('home')">→ بازگشت</button>
+  <div class="section-box"><div class="section-title">⚙️ تنظیمات</div>
+    <div class="setting-row"><span class="nm">🔊 افکت صدا</span><input type="checkbox" ${S.sfx?'checked':''} onchange="S.sfx=this.checked;saveS()"></div>
+    <div class="setting-row"><span class="nm">🎚️ بلندی صدا</span><input type="range" min="0" max="100" value="${S.vol}" oninput="S.vol=+this.value;saveS();tone(660,.08)"></div>
+    <div class="setting-row"><span class="nm">📳 لرزش</span><input type="checkbox" ${S.vibrate?'checked':''} onchange="S.vibrate=this.checked;saveS()"></div>
+    <div class="setting-row"><span class="nm">🔄 تعداد دور</span><div class="stepper"><button class="btn sm" onclick="stepS('rounds',-1,1,10)">‹</button><b>${fa(S.rounds)} دور</b><button class="btn sm" onclick="stepS('rounds',1,1,10)">›</button></div></div>
+    <div class="setting-row"><span class="nm">⏱️ زمان هر دور</span><div class="stepper"><button class="btn sm" onclick="stepS('time',-15,30,180)">‹</button><b>${fa(S.time)} ثانیه</b><button class="btn sm" onclick="stepS('time',15,30,180)">›</button></div></div>
+    <div class="mut" style="margin:14px 0 8px">موضوع‌های بازی</div>
+    <div class="chips">${ALL_CATS.map(c=>`<span class="chip ${S.cats.includes(c)?'on':''}" onclick="toggleCat('${c}')">${CATEMO[c]} ${c}</span>`).join('')}</div>
+    <button class="btn coral block" style="margin-top:20px" onclick="ask('همهٔ پیشرفتت پاک می‌شه. مطمئنی؟',resetAll)">🗑️ پاک کردن همه‌چیز</button>
+  </div>`;
+};
+function stepS(k,d,mn,mx){S[k]=Math.max(mn,Math.min(mx,S[k]+d));saveS();RENDER.settings();}
+function toggleCat(c){
+  const has=S.cats.includes(c);
+  if(has&&S.cats.length<=3)return toast('حداقل ۳ موضوع لازم است');
+  S.cats=ALL_CATS.filter(x=>x===c?!has:S.cats.includes(x));saveS();RENDER.settings();
+}
+function resetAll(){Object.keys(localStorage).filter(k=>k.startsWith('sf2_')).forEach(k=>localStorage.removeItem(k));location.reload();}
+/* ================= GAME UI (shared) ================= */
+function drawGame(){
+  const solo=G.mode!=='online';
+  $('#p-game').innerHTML=`
+  <div class="game-header"><div style="font-weight:900">دور ${fa(G.round)}/${fa(G.total)}</div><div class="game-letter">${G.letter}</div><div class="game-timer" id="gTimer">--</div></div>
+  ${solo?`<div class="powerups">
+    <div class="powerup-btn" id="pw-hint" onclick="usePower('hint')"><span class="p-icon">💡</span>راهنما <span class="p-count"></span></div>
+    <div class="powerup-btn" id="pw-time" onclick="usePower('time')"><span class="p-icon">⏱️</span>+۱۵ ثانیه <span class="p-count"></span></div>
+    <div class="powerup-btn" id="pw-skip" onclick="usePower('skip')"><span class="p-icon">❌</span>حذف دسته <span class="p-count"></span></div>
+  </div>`:`<div class="stopbanner" id="gStop"></div>`}
+  <div class="notebook"><table class="game-table">${G.cats.map((c,i)=>`<tr id="row-${i}"><td><div class="cat-cell"><span>${CATEMO[c]||'📌'}</span>${esc(c)}</div></td><td><input id="in-${i}" data-i="${i}" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="..."></td></tr>`).join('')}</table></div>
+  ${solo?`<button class="submit-btn" onclick="submitSolo()">✓ ثبت جواب‌ها</button><button class="submit-btn ghost" onclick="ask('از بازی خارج شی؟',quitGame)">انصراف</button>`
+        :`<button class="submit-btn stop" id="stopBtn" disabled onclick="doStop()">✋ استپ!</button><div class="mut" style="text-align:center">وقتی همهٔ خانه‌ها با حرف «${G.letter}» پر شد، می‌تونی استپ بزنی.</div>`}`;
+  const inputs=$$('#p-game input[data-i]');
+  const check=()=>{
+    let all=true;
+    inputs.forEach(i=>{const ok=valid(i.value,G.letter);i.classList.toggle('correct',ok);i.classList.toggle('wrong',!!i.value.trim()&&!ok);if(!ok&&i.closest('tr').style.display!=='none')all=false;});
+    const b=$('#stopBtn');if(b)b.disabled=!all||G.submitted||!!(R&&R.stopAt);
+  };
+  inputs.forEach((inp,k)=>{
+    inp.oninput=check;
+    inp.onkeydown=e=>{
+      if(e.key!=='Enter')return;e.preventDefault();
+      const nx=inputs.slice(k+1).find(x=>x.closest('tr').style.display!=='none');
+      if(nx)nx.focus();else if(G.mode==='online'){const b=$('#stopBtn');if(b&&!b.disabled)b.click();}else submitSolo();
+    };
+  });
+  if(solo)updPower();
+  inputs[0]&&inputs[0].focus();
+}
+function updPower(){
+  ['hint','time','skip'].forEach(k=>{const el=$('#pw-'+k);if(!el)return;el.querySelector('.p-count').textContent=fa(P.inv[k]);el.classList.toggle('disabled',P.inv[k]<=0);});
+}
+function usePower(k){
+  if(!G||!G.active||G.mode==='online')return;
+  if(P.inv[k]<=0){toast('تموم شده! از فروشگاه بخر');return;}
+  if(k==='hint'){
+    const i=G.cats.findIndex((c,i)=>!G.hidden.has(i)&&!$('#in-'+i).value.trim()&&dictWords(c,G.letter).length);
+    if(i<0){toast('برای خانه‌های خالی راهنمایی ندارم');return;}
+    const w=rnd(dictWords(G.cats[i],G.letter)),el=$('#in-'+i);el.placeholder='💡 '+w.slice(0,2)+'…';el.focus();
+  }else if(k==='time'){G.endAt+=15000;toast('⏱️ ۱۵ ثانیه اضافه شد');}
+  else if(k==='skip'){
+    const vis=G.cats.map((c,i)=>i).filter(i=>!G.hidden.has(i));
+    if(vis.length<=3){toast('حداقل ۳ دسته باید بماند');return;}
+    const emp=vis.filter(i=>!$('#in-'+i).value.trim()),i=rnd(emp.length?emp:vis);
+    G.hidden.add(i);$('#row-'+i).style.display='none';toast('❌ یک دسته حذف شد');
+  }
+  P.inv[k]--;saveP();updPower();SFX.ok();
+}
+
+/* ================= TICKER ================= */
+setInterval(()=>{
+  if(G&&G.active){
+    if(G.mode==='online'&&!R)return;
+    let left;
+    if(G.mode==='online'){const end=Math.min(R.endsAt,R.stopAt||Infinity);left=Math.ceil((end-now())/1000);}
+    else left=Math.ceil((G.endAt-Date.now())/1000);
+    left=Math.max(0,left);
+    const el=$('#gTimer');if(el){el.textContent=fa(left);el.classList.toggle('danger',left<=10);}
+    if(left!==G.lastLeft){G.lastLeft=left;if(left>0&&left<=5)SFX.tick();}
+    if(left<=0){if(G.mode==='online'){if(!G.submitted)submitOnline();}else submitSolo();}
+  }
+  if(R&&R.status==='review'){const el=$('#bTimer');if(el)el.textContent=fa(Math.max(0,Math.ceil((R.reviewEnds-now())/1000)));}
+},250);
+
+/* ================= SOLO / DAILY ================= */
+function dailyLetter(){let h=0;const s=today();for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return LETTERS[h%LETTERS.length];}
+function startSolo(mode){
+  if(mode==='daily'&&P.lastDaily===today())return toast('امروز چالش رو انجام دادی؛ فردا دوباره بیا!');
+  G={mode,round:1,total:mode==='daily'?1:S.rounds,used:[],cats:S.cats.slice(),me:0,bot:[0,0],active:false,perfect:0,hidden:new Set()};
+  soloRound();
+}
+function soloRound(){
+  if(G.mode==='daily')G.letter=dailyLetter();
+  else{const pool=LETTERS.filter(l=>!G.used.includes(l));G.letter=rnd(pool.length?pool:LETTERS);G.used.push(G.letter);}
+  G.hidden=new Set();G.endAt=Date.now()+(G.mode==='daily'?60:S.time)*1000;G.active=true;G.lastLeft=-1;
+  drawGame();show('game');
+}
+function submitSolo(){
+  if(!G||!G.active||G.mode==='online')return;
+  G.active=false;
+  const L=G.letter,left=Math.max(0,Math.ceil((G.endAt-Date.now())/1000));
+  const bots=BOTS.map(n=>({n,a:{}})),rows=[];
+  let pts=0,valids=0,vis=0;
+  G.cats.forEach((c,i)=>{
+    if(G.hidden.has(i))return;vis++;
+    const inp=$('#in-'+i),a=norm(inp.value),dw=dictWords(c,L);
+    bots.forEach(b=>{b.a[i]=dw.length&&Math.random()<.7?rnd(dw):'';});
+    const same=bots.some(b=>b.a[i]&&norm(b.a[i])===a);
+    let s=0,st='bad';
+    if(valid(a,L)){valids++;const known=dw.map(norm).includes(a);s=known&&!same?10:5;st=known?'ok':'unk';}
+    inp.disabled=true;inp.className=st==='ok'?'correct':st==='unk'?'same':(a?'wrong':'');
+    pts+=s;rows.push({c,a,s,st,b:bots.map(b=>b.a[i])});
+  });
+  const all=valids===vis&&vis>0,bonus=all?Math.floor(left/6):0;
+  pts+=bonus;G.me+=pts;
+  bots.forEach((b,bi)=>{let t=0;rows.forEach((r,ri)=>{const ba=b.a[Object.keys(b.a)[ri]];if(ba)t+=(valid(r.a,L)&&norm(ba)===r.a)?5:10;});G.bot[bi]+=t;});
+  if(all){P.perfect++;if(left>=30)P.speed++;SFX.win();}else SFX.ok();
+  saveP();checkAch();
+  setTimeout(()=>modal(`<h3>${all?'🌟 دور کامل!':'نتیجهٔ دور '+fa(G.round)}</h3>
+    ${rows.map(r=>`<div class="res-row"><div><b>${esc(r.c)}</b>: ${esc(r.a)||'—'}<small>${BOTS.map((n,bi)=>n.split(' ')[0]+': '+(r.b[bi]||'—')).join(' · ')}</small></div><span class="pts">${r.st==='unk'?'❔ ':''}${fa(r.s)}</span></div>`).join('')}
+    ${bonus?`<div class="res-row"><b>⚡ پاداش سرعت</b><span class="pts">+${fa(bonus)}</span></div>`:''}
+    <div style="font-size:1.3rem;font-weight:900;margin:12px 0">امتیاز دور: <span class="pts">${fa(pts)}</span></div>
+    <div class="mut" style="margin-bottom:10px">❔ = کلمه‌ای که در دیکشنری من نبود (۵ امتیاز)</div>
+    <button class="btn teal block" onclick="nextSolo()">${G.round>=G.total?'نتیجهٔ نهایی ➡️':'دور بعدی ➡️'}</button>`),700);
+}
+function nextSolo(){closeModal();if(G.round>=G.total)endSolo();else{G.round++;soloRound();}}
+function endSolo(){
+  const list=[{n:'تو',e:P.emoji,s:G.me,me:1},{n:BOTS[0],e:'🤖',s:G.bot[0]},{n:BOTS[1],e:'🤖',s:G.bot[1]}].sort((a,b)=>b.s-a.s);
+  const win=G.me>0&&G.me>=list[0].s;
+  let extra=0;
+  if(G.mode==='daily'){
+    P.streak=P.lastDaily===yesterday()?P.streak+1:1;P.lastDaily=today();extra=20+P.streak*5;
+  }
+  const coins=applyStats({score:G.me,win,extra});
+  G.mode0=G.mode;G.active=false;
+  drawFinal({list,win,coins,solo:true,mode:G.mode});
+  show('final');
+  if(win){confetti();SFX.win();}
+}
+function drawFinal(o){
+  const m=['🥇','🥈','🥉'];
+  $('#p-final').innerHTML=`
+  <div class="big-emoji">${o.win?'🏆':'🎮'}</div>
+  <div class="final-title">${o.win?(o.solo?'بردی! آفرین':'برنده: '+esc(o.list[0].n)):'بازی تموم شد'}</div>
+  <div class="mut" style="text-align:center;margin-bottom:14px">${o.coins!=null?'🪙 +'+fa(o.coins)+' سکه · ':''}نتیجهٔ نهایی</div>
+  <div class="online-card">${o.list.map((u,i)=>`<div class="rank ${i===0?'first':''}"><span style="width:28px;text-align:center">${m[i]||fa(i+1)}</span><span>${esc(u.e||'😎')}</span><span>${esc(u.n)}${u.me?' (تو)':''}</span><b>${fa(u.s)}</b></div>`).join('')}</div>
+  ${o.solo?`<button class="btn teal block" onclick="${o.mode==='daily'?"go('home')":"startSolo('solo')"}">${o.mode==='daily'?'🏠 خانه':'🔄 بازی دوباره'}</button><div style="height:10px"></div><button class="btn block" onclick="G=null;go('home')">🏠 خانه</button>`
+  :`${R&&R.host===P.id?'<button class="btn teal block" onclick="resetRoom()">🔄 بازی جدید</button><div style="height:10px"></div>':'<div class="wait">منتظر میزبان برای بازی جدید...</div>'}<button class="btn block" onclick="leaveRoom()">🚪 خروج</button>`}`;
+}
+/* ================= ONLINE ROOMS ================= */
+const catsOf=r=>r.cats?Object.values(r.cats):DEF_CATS;
+const nameOfP=id=>(R&&R.players&&R.players[id]&&R.players[id].n)||'؟';
+
+async function createRoom(){
+  if(!await needFB())return;
+  let code,snap;
+  do{code=genCode();snap=await db.ref('rooms/'+code).once('value');}while(snap.exists());
+  await db.ref('rooms/'+code).set({host:P.id,status:'lobby',round:0,total:S.rounds,duration:S.time,cats:S.cats,used:'',created:now(),
+    players:{[P.id]:{n:P.name,e:P.emoji,j:now(),on:true}}});
+  enterRoom(code);
+}
+async function joinRoom(forced){
+  const code=(typeof forced==='string'?forced:($('#roomCode')&&$('#roomCode').value)||'').trim().toUpperCase();
+  pendingJoin=null;
+  if(code.length!==6)return toast('کد ۶ حرفی وارد کن');
+  if(!await needFB())return;
+  const room=(await db.ref('rooms/'+code).once('value')).val();
+  if(!room){SFX.bad();return toast('اتاقی با این کد پیدا نشد');}
+  const mine=room.players&&room.players[P.id];
+  if(!mine&&room.status!=='lobby')return toast('بازی این اتاق شروع شده');
+  if(!mine&&Object.keys(room.players||{}).length>=8)return toast('اتاق پر است');
+  const up={n:P.name,e:P.emoji,on:true};if(!mine)up.j=now();
+  await db.ref('rooms/'+code+'/players/'+P.id).update(up);
+  enterRoom(code);
+}
+function enterRoom(code){
+  if(roomRef)roomRef.off();
+  RC=code;roomRef=db.ref('rooms/'+code);viewKey='';lock='';
+  localStorage.setItem(LS('room'),code);
+  const on=roomRef.child('players/'+P.id+'/on');on.onDisconnect().set(false);on.set(true);
+  roomRef.on('value',onRoom);
+}
+async function resumeRoom(){
+  const code=localStorage.getItem(LS('room'));if(!code)return;
+  try{
+    const r=(await db.ref('rooms/'+code).once('value')).val();
+    if(r&&r.players&&r.players[P.id])enterRoom(code);else localStorage.removeItem(LS('room'));
+  }catch(e){}
+}
+function exitRoom(){
+  if(roomRef)roomRef.off();
+  roomRef=null;RC=null;R=null;G=null;viewKey='';localStorage.removeItem(LS('room'));go('home',false);
+}
+function leaveRoom(){
+  if(!roomRef){go('home');return;}
+  const ref=roomRef,r=R;
+  ref.off();
+  if(r&&r.status==='lobby'){
+    ref.child('players/'+P.id).remove();
+    const others=Object.keys(r.players||{}).filter(i=>i!==P.id);
+    if(!others.length)ref.remove();else if(r.host===P.id)ref.child('host').set(others[0]);
+  }else ref.child('players/'+P.id+'/on').set(false);
+  roomRef=null;RC=null;R=null;G=null;viewKey='';localStorage.removeItem(LS('room'));go('home');
+}
+function kick(id){if(roomRef&&R&&R.host===P.id)roomRef.child('players/'+id).remove();}
+function shareRoom(){
+  const url=location.origin+location.pathname+'?room='+RC,txt='بیا اسم فامیل بازی کنیم! کد اتاق: '+RC+'\n'+url;
+  if(navigator.share)navigator.share({title:'اسم فامیل',text:txt}).catch(()=>{});else copyText(txt);
+}
+
+/* ---- room listener ---- */
+function onRoom(snap){
+  const room=snap.val();
+  if(!room){toast('اتاق بسته شد');return exitRoom();}
+  R=room;
+  if(!R.players||!R.players[P.id]){toast('از اتاق خارج شدی');return exitRoom();}
+  // host migration
+  const hp=R.players[R.host];
+  if(!hp||hp.on===false){
+    const cand=Object.entries(R.players).filter(([,p])=>p.on!==false).sort((a,b)=>(a[1].j||0)-(b[1].j||0))[0];
+    if(cand&&cand[0]===P.id)roomRef.update({host:P.id});
+  }
+  const st=R.status,key=st+'|'+R.round+'|'+R.gid;
+  if(st==='lobby'){
+    if(viewKey!=='lobby'){viewKey='lobby';G=null;}
+    show('room');renderRoom();
+  }else if(st==='playing'){
+    if(viewKey!==key){viewKey=key;initOnlineRound();}else updGameBanner();
+  }else if(st==='review'||st==='results'){
+    if(G)G.active=false;viewKey=key+st;show('board');drawBoard();
+  }else if(st==='finished'){
+    if(viewKey!=='fin'){viewKey='fin';finishOnline();}else drawFinalOnline();
+  }
+}
+function renderRoom(){
+  const r=R,host=r.host===P.id,cats=catsOf(r),ps=Object.entries(r.players||{}).sort((a,b)=>(a[1].j||0)-(b[1].j||0));
+  $('#p-room').innerHTML=`
+  <button class="back-btn" onclick="leaveRoom()">→ خروج از اتاق</button>
+  <div class="online-card"><h2>🎉 اتاق بازی</h2><div class="room-code-display" onclick="copyText('${RC}')">${RC}</div>
+    <div class="row2"><button class="btn yellow sm" onclick="copyText('${RC}')">📋 کپی کد</button><button class="btn blue sm" onclick="shareRoom()">🔗 دعوت</button></div></div>
+  <div class="online-card"><div class="section-title">بازیکن‌ها (${fa(ps.length)}/۸)</div>
+    ${ps.map(([id,p])=>`<div class="player-row"><div class="pav">${esc(p.e||'😎')}</div><div class="pinfo"><b>${esc(p.n)}${id===P.id?' (تو)':''}</b><small class="${p.on===false?'off':''}">${id===r.host?'👑 میزبان':(p.on===false?'⚫ آفلاین':'🟢 آنلاین')}</small></div>${host&&id!==P.id?`<button class="kick" onclick="kick('${id}')">✕</button>`:''}</div>`).join('')}</div>
+  <div class="online-card"><div class="section-title">⚙️ تنظیمات بازی</div>
+    <div class="row2"><div><div class="mut">تعداد دور</div><select class="input-field" ${host?'':'disabled'} onchange="roomSet('total',+this.value)">${[3,5,8,10].map(n=>`<option value="${n}" ${n===r.total?'selected':''}>${fa(n)} دور</option>`).join('')}</select></div>
+    <div><div class="mut">زمان هر دور</div><select class="input-field" ${host?'':'disabled'} onchange="roomSet('duration',+this.value)">${[45,60,90,120].map(n=>`<option value="${n}" ${n===r.duration?'selected':''}>${fa(n)} ثانیه</option>`).join('')}</select></div></div>
+    <div class="mut" style="margin:14px 0 8px">موضوع‌ها ${host?'(برای انتخاب بزن)':''}</div>
+    <div class="chips">${ALL_CATS.map(c=>`<span class="chip ${cats.includes(c)?'on':''}" ${host?`onclick="roomCat('${c}')"`:''}>${CATEMO[c]} ${c}</span>`).join('')}</div></div>
+  ${host?'<button class="btn coral block" onclick="startOnlineRound()">▶ شروع بازی</button>':'<div class="wait">منتظر شروع بازی توسط میزبان...</div>'}`;
+}
+function roomSet(k,v){if(R&&R.host===P.id)roomRef.child(k).set(v);}
+function roomCat(c){
+  const cats=catsOf(R),has=cats.includes(c);
+  if(has&&cats.length<=3)return toast('حداقل ۳ موضوع لازم است');
+  roomRef.child('cats').set(ALL_CATS.filter(x=>x===c?!has:cats.includes(x)));
+}
+
+/* ---- playing ---- */
+function startOnlineRound(){
+  if(!R||R.host!==P.id)return;
+  const used=(R.used||'').split('');let pool=LETTERS.filter(l=>!used.includes(l));if(!pool.length)pool=LETTERS;
+  const letter=rnd(pool),round=(R.round||0)+1;
+  const up={status:'playing',round,letter,used:(R.used||'')+letter,endsAt:now()+R.duration*1000,stopAt:null,stopBy:null,reviewEnds:null};
+  if(round===1)up.gid=now();
+  roomRef.update(up);
+}
+function initOnlineRound(){
+  G={mode:'online',round:R.round,total:R.total,letter:R.letter,cats:catsOf(R),active:true,submitted:false,hidden:new Set(),lastLeft:-1};
+  drawGame();show('game');SFX.ok();
+}
+function updGameBanner(){
+  const b=$('#gStop');if(!b||!G)return;
+  b.textContent=G.submitted?'ثبت شد؛ منتظر بقیه...':(R.stopAt?'✋ '+nameOfP(R.stopBy)+' استپ کرد!':'');
+  const sb=$('#stopBtn');if(sb&&R.stopAt)sb.disabled=true;
+  if(R.stopAt&&!G.stopSfx){G.stopSfx=1;SFX.stop();vib(200);}
+}
+function doStop(){if(R&&!R.stopAt)roomRef.update({stopAt:now()+5000,stopBy:P.id});}
+function submitOnline(){
+  if(!G||G.submitted||!roomRef)return;
+  G.submitted=true;
+  const vals={ok:1};
+  $$('#p-game input[data-i]').forEach(i=>{vals['c'+i.dataset.i]=i.value.trim();i.disabled=true;});
+  const sb=$('#stopBtn');if(sb)sb.disabled=true;
+  roomRef.child('answers/r'+G.round+'/'+P.id).set(vals);
+  updGameBanner();
+}
+
+/* ---- scoring ---- */
+function computeRound(room,rej){
+  const cats=catsOf(room),L=room.letter,ans=(room.answers||{})['r'+room.round]||{},pids=Object.keys(room.players||{}),out={};
+  pids.forEach(p=>out[p]={t:0});
+  cats.forEach((_,i)=>{
+    const get=p=>rej[p+'_'+i]?'':((ans[p]||{})['c'+i]||''),cnt={};
+    pids.forEach(p=>{const v=get(p);if(valid(v,L)){const n=norm(v);cnt[n]=(cnt[n]||0)+1;}});
+    pids.forEach(p=>{const v=get(p);let pt=0;if(valid(v,L))pt=cnt[norm(v)]===1?10:5;out[p]['c'+i]=pt;out[p].t+=pt;});
+  });
+  return out;
+}
+function calcRejected(room){
+  const votes=(room.votes||{})['r'+room.round]||{},n=Object.keys(room.players||{}).length,cnt={},rej={};
+  Object.entries(votes).forEach(([voter,vs])=>Object.keys(vs).forEach(k=>{if(k==='_d'||k.startsWith(voter+'_'))return;cnt[k]=(cnt[k]||0)+1;}));
+  Object.entries(cnt).forEach(([k,c])=>{if(c*2>n-1)rej[k]=1;});
+  return rej;
+}
+function totalsOf(room){
+  const t={};Object.keys(room.players||{}).forEach(p=>t[p]=0);
+  Object.values(room.scores||{}).forEach(s=>Object.entries(s).forEach(([p,v])=>{if(p in t)t[p]+=v.t||0;}));
+  return t;
+}
+
+/* ---- host loop ---- */
+setInterval(()=>{
+  if(!R||!roomRef||R.host!==P.id)return;
+  const st=R.status,base=st+'|'+R.round+'|'+R.gid;
+  if(st==='playing'){
+    const end=Math.min(R.endsAt,R.stopAt||Infinity),ans=(R.answers||{})['r'+R.round]||{};
+    const online=Object.values(R.players).filter(p=>p.on!==false).length;
+    if((Object.keys(ans).length>=online||now()>end+4000)&&lock!==base){
+      lock=base;roomRef.update({status:'review',reviewEnds:now()+20000,['scores/r'+R.round]:computeRound(R,{})});
+    }
+  }else if(st==='review'){
+    const votes=(R.votes||{})['r'+R.round]||{};
+    const ids=Object.entries(R.players).filter(([,p])=>p.on!==false).map(([id])=>id);
+    const done=ids.every(id=>votes[id]&&votes[id]._d);
+    if((done||now()>R.reviewEnds)&&lock!==base){
+      lock=base;const rej=calcRejected(R);
+      roomRef.update({status:'results',['scores/r'+R.round]:computeRound(R,rej),['rej/r'+R.round]:Object.keys(rej).length?rej:null});
+    }
+  }
+},500);
+
+/* ---- board (review + results) ---- */
+function toggleFlag(pid,i){
+  const k=pid+'_'+i,my=((R.votes||{})['r'+R.round]||{})[P.id]||{};
+  roomRef.child('votes/r'+R.round+'/'+P.id+'/'+k).set(my[k]?null:1);SFX.click();
+}
+function confirmReview(){roomRef.child('votes/r'+R.round+'/'+P.id+'/_d').set(1);}
+function hostNext(){if(R.round>=R.total)roomRef.update({status:'finished'});else startOnlineRound();}
+function drawBoard(){
+  const r=R,cats=catsOf(r),pids=Object.keys(r.players),ans=(r.answers||{})['r'+r.round]||{},sc=(r.scores||{})['r'+r.round]||{},rej=(r.rej||{})['r'+r.round]||{};
+  const review=r.status==='review',votes=(r.votes||{})['r'+r.round]||{},my=votes[P.id]||{},done=!!my._d;
+  const tot=totalsOf(r),order=[...pids].sort((a,b)=>tot[b]-tot[a]),host=r.host===P.id;
+  let h=`<div class="game-header"><div style="font-weight:900">دور ${fa(r.round)}/${fa(r.total)}</div><div class="game-letter">${r.letter}</div><div class="game-timer" id="bTimer">${review?'--':'✓'}</div></div>`;
+  if(review)h+=`<div class="hint-box">جواب نادرست دیدی؟ روی 🚩 بزن تا اعتراض ثبت بشه. با رأی اکثریت، جواب رد می‌شه.</div>`;
+  cats.forEach((c,i)=>{
+    h+=`<div class="cat-card"><div class="cat-title">${CATEMO[c]||'📌'} ${esc(c)}</div>`+pids.map(p=>{
+      const a=(ans[p]||{})['c'+i]||'',pt=(sc[p]||{})['c'+i]||0,isRej=!!rej[p+'_'+i];
+      return `<div class="ans-row ${isRej?'rej':''}"><span class="an">${esc(nameOfP(p))}${p===P.id?' (تو)':''}</span><span class="av">${esc(a)||'—'}${isRej?' ⛔':''}</span><span class="ap ${pt?'':'z'}">${fa(pt)}</span>${review&&p!==P.id&&a?`<button class="flag ${my[p+'_'+i]?'on':''}" onclick="toggleFlag('${p}',${i})">🚩</button>`:''}</div>`;
+    }).join('')+'</div>';
+  });
+  h+=`<div class="online-card"><div class="section-title">🏅 امتیاز کل</div>${order.map((p,i)=>`<div class="rank ${i===0?'first':''}"><span>${fa(i+1)}</span><span>${esc(r.players[p].e||'😎')}</span><span>${esc(r.players[p].n)}</span><span class="mut">+${fa((sc[p]||{}).t||0)}</span><b>${fa(tot[p])}</b></div>`).join('')}</div>`;
+  if(review)h+=`<button class="btn teal block" ${done?'disabled':''} onclick="confirmReview()">${done?'⏳ منتظر بقیه...':'✓ تایید و ادامه'}</button>`;
+  else h+=host?`<button class="btn coral block" onclick="hostNext()">${r.round>=r.total?'🏁 نتیجهٔ نهایی':'➡️ دور بعدی'}</button>`:'<div class="wait">منتظر میزبان...</div>';
+  $('#p-board').innerHTML=h;
+}
+
+/* ---- final ---- */
+function finalList(){
+  const tot=totalsOf(R);
+  return Object.keys(R.players).sort((a,b)=>tot[b]-tot[a]).map(id=>({n:R.players[id].n,e:R.players[id].e,s:tot[id],me:id===P.id,id}));
+}
+function drawFinalOnline(){
+  const list=finalList();
+  drawFinal({list,win:list[0]&&list[0].me&&list[0].s>0,coins:G&&G.coins!=null?G.coins:null,solo:false});
+}
+function finishOnline(){
+  const list=finalList(),me=list.find(x=>x.me),win=list.length>1&&list[0].id===P.id&&list[0].s>0&&(!list[1]||list[1].s<list[0].s);
+  const key=RC+':'+R.gid;let coins=null;
+  if(localStorage.getItem(LS('counted'))!==key){
+    localStorage.setItem(LS('counted'),key);
+    coins=applyStats({score:me?me.s:0,win,online:true});
+  }
+  G={mode:'online',active:false,coins};
+  drawFinalOnline();show('final');
+  if(win){confetti();SFX.win();}
+}
+function resetRoom(){
+  if(!R||R.host!==P.id)return;
+  roomRef.update({status:'lobby',round:0,used:'',answers:null,scores:null,votes:null,rej:null,stopAt:null,stopBy:null,reviewEnds:null});
+}
+/* ================= INIT ================= */
+(function init(){
+  applyTheme();
+  const q=new URLSearchParams(location.search).get('room');
+  if(q){pendingJoin=q.toUpperCase().slice(0,6);history.replaceState(null,'',location.pathname);}
+  initFirebase();
+  history.replaceState({p:'home'},'');
+  if(pendingJoin)go('online',false);else go('home',false);
+  if(FIRST_RUN){saveP();firstRun();}
+})();
+</script>
+</body>
+</html>
